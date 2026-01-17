@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 export interface Patient {
   _id: string;
   name: string;
-  age: number;
-  weight: number;
-  height: number;
+  age?: number;
+  weight?: number;
+  height?: number;
   medicalHistory: string;
   doctorId: string;
   fileUrls: string[];
@@ -18,9 +18,9 @@ export interface Patient {
 
 interface CreatePatientInput {
   name: string;
-  age: number;
-  weight: number;
-  height: number;
+  age?: number;
+  weight?: number;
+  height?: number;
   medicalHistory?: string;
 }
 
@@ -78,23 +78,7 @@ async function fetchPatient(id: string): Promise<Patient> {
   return data.data;
 }
 
-async function searchPatients(query: string): Promise<Patient[]> {
-  const token = await getAuthToken();
-  if (!token) throw new Error('Not authenticated');
 
-  const res = await fetch(`/api/patients/search?q=${encodeURIComponent(query)}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error('Failed to search patients');
-  }
-
-  const data = await res.json();
-  return data.data;
-}
 
 async function createPatient(input: CreatePatientInput): Promise<Patient> {
   const token = await getAuthToken();
@@ -191,20 +175,6 @@ export function usePatient(id: string) {
 }
 
 /**
- * Hook to search patients by name
- */
-export function useSearchPatients(query: string) {
-  const { user } = useAuth();
-  
-  return useQuery({
-    queryKey: ['patients', 'search', query],
-    queryFn: () => searchPatients(query),
-    enabled: !!user && query.length > 0,
-    staleTime: 1000 * 60 * 2, // 2 minutes
-  });
-}
-
-/**
  * Hook to create a new patient with optimistic updates
  */
 export function useCreatePatient() {
@@ -245,6 +215,7 @@ export function useCreatePatient() {
     onSuccess: (data) => {
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', 'today'] });
       router.push('/patients');
     },
   });
@@ -302,6 +273,35 @@ export function useUpdatePatient() {
 }
 
 /**
+ * Hook to get today's patients
+ */
+export function useTodaysPatients() {
+  return useQuery({
+    queryKey: ['patients', 'today'],
+    queryFn: async () => {
+      const token = await getAuthToken();
+      if (!token) throw new Error('Not authenticated');
+
+      const res = await fetch('/api/patients/today', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to fetch today\'s patients');
+      }
+
+      const data = await res.json();
+      return data.patients as Patient[];
+    },
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 30 * 1000, // Auto-refetch every 30 seconds
+  });
+}
+
+/**
  * Hook to delete a patient
  */
 export function useDeletePatient() {
@@ -333,7 +333,74 @@ export function useDeletePatient() {
     onSuccess: () => {
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', 'today'] });
       router.push('/patients');
     },
+  });
+}
+
+/**
+ * Hook to search and filter patients
+ */
+export interface SearchFilters {
+  q?: string;
+  dateRange?: string;
+  startDate?: string;
+  endDate?: string;
+  month?: number;
+  year?: number;
+  sortBy?: string;
+  sortOrder?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface SearchResult {
+  patients: Patient[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  query?: string;
+}
+
+async function searchPatients(filters: SearchFilters): Promise<SearchResult> {
+  const token = await getAuthToken();
+  if (!token) throw new Error('Not authenticated');
+
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      params.append(key, value.toString());
+    }
+  });
+
+  const res = await fetch(`/api/patients/search?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to search patients');
+  }
+
+  const data = await res.json();
+  return {
+    patients: data.patients,
+    pagination: data.pagination,
+    query: data.query,
+  };
+}
+
+export function usePatientSearch(filters: SearchFilters) {
+  return useQuery({
+    queryKey: ['patients', 'search', filters],
+    queryFn: () => searchPatients(filters),
+    staleTime: 30 * 1000, // 30 seconds
+    enabled: true, // Always enabled, will show all patients if no filters
   });
 }

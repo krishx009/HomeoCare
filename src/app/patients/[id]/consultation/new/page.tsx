@@ -53,7 +53,7 @@ const consultationSchema = z.object({
   frequency: z.string().min(1, 'Frequency is required'),
   duration: z.string().min(1, 'Duration is required'),
   instructions: z.string().optional(),
-  reasonForSelection: z.string().min(20, 'Reason must be at least 20 characters'),
+  reasonForSelection: z.string().optional(), // MADE OPTIONAL
   doctorNotes: z.string().optional(),
   diagnosisApproach: z.enum(['constitutional', 'acute', 'chronic', 'miasmatic']),
   followUpDate: z.string().optional(),
@@ -635,11 +635,11 @@ export default function NewConsultationPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="reasonForSelection">Reason for Remedy Selection *</Label>
+                    <Label htmlFor="reasonForSelection">Reason for Remedy Selection (Optional)</Label>
                     <Textarea
                       id="reasonForSelection"
                       {...register('reasonForSelection')}
-                      placeholder="Document why this remedy matches the patient's symptoms (symptom similarity, constitutional match, etc.)..."
+                      placeholder="Optional - Document why this remedy matches the patient's symptoms (symptom similarity, constitutional match, etc.)..."
                       rows={4}
                       className="mt-1"
                     />

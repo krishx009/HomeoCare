@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
-// Validation schema
+// Validation schema - ONLY NAME IS REQUIRED
 const patientSchema = z.object({
   name: z
     .string()
@@ -25,15 +25,21 @@ const patientSchema = z.object({
     .number({ invalid_type_error: 'Age must be a number' })
     .int('Age must be a whole number')
     .min(0, 'Age must be at least 0')
-    .max(150, 'Age must be less than 150'),
+    .max(150, 'Age must be less than 150')
+    .optional()
+    .or(z.literal(0)),
   weight: z
     .number({ invalid_type_error: 'Weight must be a number' })
     .positive('Weight must be positive')
-    .max(500, 'Weight must be less than 500 kg'),
+    .max(500, 'Weight must be less than 500 kg')
+    .optional()
+    .or(z.literal(0)),
   height: z
     .number({ invalid_type_error: 'Height must be a number' })
     .positive('Height must be positive')
-    .max(300, 'Height must be less than 300 cm'),
+    .max(300, 'Height must be less than 300 cm')
+    .optional()
+    .or(z.literal(0)),
   medicalHistory: z
     .string()
     .max(5000, 'Medical history must be less than 5000 characters')
@@ -57,7 +63,14 @@ export default function NewPatientPage() {
 
   const onSubmit = async (data: PatientFormData) => {
     try {
-      await createPatient.mutateAsync(data);
+      // Clean up data - remove undefined/NaN values
+      const cleanData: any = { name: data.name };
+      if (data.age && !isNaN(data.age) && data.age > 0) cleanData.age = data.age;
+      if (data.weight && !isNaN(data.weight) && data.weight > 0) cleanData.weight = data.weight;
+      if (data.height && !isNaN(data.height) && data.height > 0) cleanData.height = data.height;
+      if (data.medicalHistory) cleanData.medicalHistory = data.medicalHistory;
+
+      await createPatient.mutateAsync(cleanData);
       toast({
         title: 'Success',
         description: 'Patient created successfully',
@@ -110,14 +123,12 @@ export default function NewPatientPage() {
 
             {/* Age */}
             <div className="space-y-2">
-              <Label htmlFor="age">
-                Age <span className="text-red-500">*</span>
-              </Label>
+              <Label htmlFor="age">Age (Optional)</Label>
               <Input
                 id="age"
                 type="number"
                 {...register('age', { valueAsNumber: true })}
-                placeholder="Enter age in years"
+                placeholder="Optional - Enter age in years"
                 aria-invalid={!!errors.age}
               />
               {errors.age && (
@@ -129,15 +140,13 @@ export default function NewPatientPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Height */}
               <div className="space-y-2">
-                <Label htmlFor="height">
-                  Height (cm) <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="height">Height (cm) - Optional</Label>
                 <Input
                   id="height"
                   type="number"
                   step="0.1"
                   {...register('height', { valueAsNumber: true })}
-                  placeholder="e.g., 170"
+                  placeholder="Optional - e.g., 170"
                   aria-invalid={!!errors.height}
                 />
                 {errors.height && (
@@ -147,15 +156,13 @@ export default function NewPatientPage() {
 
               {/* Weight */}
               <div className="space-y-2">
-                <Label htmlFor="weight">
-                  Weight (kg) <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="weight">Weight (kg) - Optional</Label>
                 <Input
                   id="weight"
                   type="number"
                   step="0.1"
                   {...register('weight', { valueAsNumber: true })}
-                  placeholder="e.g., 70"
+                  placeholder="Optional - e.g., 70"
                   aria-invalid={!!errors.weight}
                 />
                 {errors.weight && (

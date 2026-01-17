@@ -74,7 +74,7 @@ export default function ViewPatientPage() {
     }
   };
 
-  const calculateBMI = (weight: number, height: number) => {
+  const calculateBMI = (weight?: number, height?: number) => {
     if (!weight || !height || height === 0) return 'N/A';
     const heightInMeters = height / 100;
     const bmi = weight / (heightInMeters * heightInMeters);
@@ -90,7 +90,7 @@ export default function ViewPatientPage() {
     return { label: 'Obese', color: 'red' };
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -125,7 +125,7 @@ export default function ViewPatientPage() {
     );
   }
 
-  const patient = patientData.patient;
+  const patient = patientData;
   const bmi = calculateBMI(patient.weight, patient.height);
   const bmiCategory = getBMICategory(bmi);
 
@@ -199,9 +199,9 @@ export default function ViewPatientPage() {
               <TabsTrigger value="info">Patient Info</TabsTrigger>
               <TabsTrigger value="consultations">
                 Consultations
-                {consultations && consultations.length > 0 && (
+                {consultations && consultations.consultations.length > 0 && (
                   <Badge variant="secondary" className="ml-2">
-                    {consultations.length}
+                    {consultations.consultations.length}
                   </Badge>
                 )}
               </TabsTrigger>
@@ -310,9 +310,9 @@ export default function ViewPatientPage() {
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                   <span className="ml-2 text-muted-foreground">Loading consultations...</span>
                 </div>
-              ) : consultations && consultations.length > 0 ? (
+              ) : consultations && consultations.consultations.length > 0 ? (
                 <div className="space-y-4">
-                  {consultations.map((consultation) => {
+                  {consultations.consultations.map((consultation) => {
                     const isExpanded = expandedConsultations[consultation.consultationId];
                     const hasFollowup = !!consultation.followUpDate;
                     const followUpPast = hasFollowup && new Date(consultation.followUpDate!) < new Date();

@@ -122,8 +122,9 @@ const PrescribedRemedySchema = new Schema<IPrescribedRemedy>({
   instructions: { type: String, default: '' },
   reasonForSelection: {
     type: String,
-    required: [true, 'Reason for remedy selection is required'],
+    required: false,
     maxlength: [1000, 'Reason cannot exceed 1000 characters'],
+    default: '',
   },
 }, { _id: false });
 
@@ -198,19 +199,19 @@ const PatientSchema = new Schema<IPatient>(
     },
     age: {
       type: Number,
-      required: [true, 'Age is required'],
+      required: false,
       min: [0, 'Age cannot be negative'],
       max: [150, 'Age cannot exceed 150'],
     },
     weight: {
       type: Number,
-      required: [true, 'Weight is required'],
+      required: false,
       min: [0, 'Weight cannot be negative'],
       max: [500, 'Weight cannot exceed 500 kg'],
     },
     height: {
       type: Number,
-      required: [true, 'Height is required'],
+      required: false,
       min: [0, 'Height cannot be negative'],
       max: [300, 'Height cannot exceed 300 cm'],
     },
@@ -264,7 +265,11 @@ PatientSchema.pre('save', function(next) {
 });
 
 // Prevent model recompilation in development
-const Patient: Model<IPatient> = 
-  mongoose.models.Patient || mongoose.model<IPatient>('Patient', PatientSchema);
+// Delete the model if it exists to force recompilation with updated schema
+if (mongoose.models.Patient) {
+  delete mongoose.models.Patient;
+}
+
+const Patient: Model<IPatient> = mongoose.model<IPatient>('Patient', PatientSchema);
 
 export default Patient;
