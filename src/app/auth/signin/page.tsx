@@ -109,7 +109,7 @@ export default function SignInPage() {
             Sign In
           </CardTitle>
           <CardDescription className="text-center">
-            Welcome back to Patient Management System
+            Welcome back to HomeoCare
           </CardDescription>
         </CardHeader>
         <CardContent>

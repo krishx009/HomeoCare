@@ -116,7 +116,7 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-primary">
-                Patient Management System
+                HomeoCare
               </h1>
             </div>
 

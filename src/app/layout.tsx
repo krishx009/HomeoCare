@@ -7,8 +7,8 @@ import { Toaster } from '@/components/ui/toaster';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Patient Management System',
-  description: 'A comprehensive patient management system for doctors',
+  title: 'HomeoCare',
+  description: 'A comprehensive HomeoCare for doctors',
 };
 
 export default function RootLayout({

@@ -115,7 +115,7 @@ export default function SignUpPage() {
             Create Account
           </CardTitle>
           <CardDescription className="text-center">
-            Join Patient Management System
+            Join HomeoCare
           </CardDescription>
         </CardHeader>
         <CardContent>
