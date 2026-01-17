@@ -51,3 +51,7 @@ node_modules/
 # build
 .next/
 dist/
+
+
+# Ignore all Markdown files
+*.md
